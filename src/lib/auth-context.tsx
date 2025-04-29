@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserType } from './types';
 import { mockUsers } from './mock-data';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -21,16 +22,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for saved user in localStorage
-    const savedUser = localStorage.getItem('kartavya_user');
-    if (savedUser) {
+    const checkSavedUser = () => {
       try {
-        const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
+        const savedUser = localStorage.getItem('kartavya_user');
+        if (savedUser) {
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+        }
       } catch (error) {
         console.error('Failed to parse saved user:', error);
+        // Clear corrupted user data
+        localStorage.removeItem('kartavya_user');
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    checkSavedUser();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -48,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (foundUser) {
         setUser(foundUser);
         localStorage.setItem('kartavya_user', JSON.stringify(foundUser));
+        
         toast({
           title: "Login Successful",
           description: `Welcome back, ${foundUser.name}!`,
@@ -75,12 +84,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem('kartavya_user');
-    toast({
-      title: "Logged Out",
-      description: "You have been successfully logged out.",
-    });
+    try {
+      setUser(null);
+      localStorage.removeItem('kartavya_user');
+      
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+      
+      // Redirect to home page after logout (can be handled by calling component if needed)
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Logout Error",
+        description: "An error occurred while logging out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const register = async (userData: Partial<User>, password: string): Promise<boolean> => {

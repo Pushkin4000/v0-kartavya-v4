@@ -16,8 +16,15 @@ interface CartItemProps {
 
 export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
   const [quantity, setQuantity] = useState(item.quantity);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const { toast } = useToast();
-  const foodItem = item.foodItem!;
+  
+  if (!item.foodItem) {
+    return null; // Don't render if food item is missing
+  }
+
+  const foodItem = item.foodItem;
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuantity = parseInt(e.target.value);
@@ -32,9 +39,12 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
     }
   };
 
-  const handleUpdateQuantity = () => {
+  const handleUpdateQuantity = async () => {
+    if (quantity === item.quantity) return;
+    
     try {
-      onUpdateQuantity(item.id, quantity);
+      setIsUpdating(true);
+      await onUpdateQuantity(item.id, quantity);
     } catch (error) {
       console.error("Error updating quantity:", error);
       toast({
@@ -42,6 +52,10 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         description: "Failed to update quantity. Please try again.",
         variant: "destructive"
       });
+      // Reset to original quantity on error
+      setQuantity(item.quantity);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -57,9 +71,10 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     try {
-      onRemove(item.id);
+      setIsRemoving(true);
+      await onRemove(item.id);
     } catch (error) {
       console.error("Error removing item:", error);
       toast({
@@ -67,6 +82,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         description: "Failed to remove item. Please try again.",
         variant: "destructive"
       });
+      setIsRemoving(false);
     }
   };
 
@@ -95,6 +111,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className="w-16 h-8 text-center"
+          disabled={isUpdating}
         />
         <span className="ml-2 text-sm text-gray-500">{foodItem.quantityUnit}</span>
       </div>
@@ -103,6 +120,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         size="icon"
         onClick={handleRemove}
         className="h-8 w-8 text-gray-500 hover:text-red-500"
+        disabled={isRemoving}
       >
         <X className="h-4 w-4" />
       </Button>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, LogOut, Menu, Package, Settings, User } from 'lucide-react';
 import {
   DropdownMenu,
@@ -15,9 +15,12 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/lib/auth-context';
 import NavLinks from './NavLinks';
+import { useToast } from '@/hooks/use-toast';
 
 export default function PageHeader() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
   const getInitials = (name: string) => {
     return name
@@ -25,6 +28,20 @@ export default function PageHeader() {
       .map(part => part.charAt(0))
       .join('')
       .toUpperCase();
+  };
+
+  const handleLogout = () => {
+    try {
+      logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast({
+        title: "Logout Error",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -122,7 +139,7 @@ export default function PageHeader() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
                       className="cursor-pointer text-red-600 focus:text-red-600" 
-                      onClick={logout}
+                      onClick={handleLogout}
                     >
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>

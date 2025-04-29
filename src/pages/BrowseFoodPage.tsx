@@ -16,7 +16,7 @@ import { useAuth } from '@/lib/auth-context';
 import FoodCard from '@/components/food/FoodCard';
 import { foodService } from '@/lib/food-service';
 import { cartService } from '@/lib/cart-service';
-import { FoodCategory, FoodItem } from '@/lib/types';
+import { FoodItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import EmptyState from '@/components/common/EmptyState';
 
@@ -26,6 +26,7 @@ export default function BrowseFoodPage() {
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
@@ -33,6 +34,7 @@ export default function BrowseFoodPage() {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+  
   if (user.userType !== 'ngo') {
     return <Navigate to="/dashboard" replace />;
   }
@@ -42,11 +44,15 @@ export default function BrowseFoodPage() {
     const fetchFoodItems = async () => {
       try {
         setLoading(true);
+        setError(null);
+        console.log("Fetching food items...");
         const items = await foodService.getAllFoodItems();
+        console.log("Retrieved items:", items);
         setFoodItems(items);
         setFilteredItems(items);
-      } catch (error) {
-        console.error('Error fetching food items:', error);
+      } catch (err) {
+        console.error('Error fetching food items:', err);
+        setError('Failed to load food listings. Please try again later.');
         toast({
           title: 'Error',
           description: 'Failed to load food listings. Please try again later.',
@@ -84,6 +90,15 @@ export default function BrowseFoodPage() {
 
   // Add item to cart
   const handleAddToCart = async (item: FoodItem) => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'You must be logged in to add items to your cart.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       await cartService.addToCart(user.id, item.id, 1);
       toast({
@@ -151,13 +166,24 @@ export default function BrowseFoodPage() {
             />
           ))}
         </div>
+      ) : error ? (
+        <div className="text-center py-12">
+          <p className="text-red-500">{error}</p>
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </div>
       ) : filteredItems.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredItems.map(item => (
             <FoodCard 
               key={item.id} 
               foodItem={item} 
-              onAddToCart={handleAddToCart}
+              onAddToCart={() => handleAddToCart(item)}
             />
           ))}
         </div>
