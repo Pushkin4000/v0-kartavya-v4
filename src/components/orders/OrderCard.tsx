@@ -54,7 +54,11 @@ export default function OrderCard({ order, userType, onUpdateStatus }: OrderCard
   
   const handleStatusChange = () => {
     if (nextStatus && onUpdateStatus) {
-      onUpdateStatus(order.id, nextStatus);
+      try {
+        onUpdateStatus(order.id, nextStatus);
+      } catch (error) {
+        console.error('Failed to update order status:', error);
+      }
     }
   };
 

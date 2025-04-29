@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FoodItem, FoodCategory } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
   name: z.string().min(3, {
@@ -49,7 +50,7 @@ interface FoodFormProps {
   onSubmit: (data: Omit<FoodItem, 'id' | 'status' | 'createdAt'>) => void;
   initialData?: Partial<FoodItem>;
   isLoading?: boolean;
-  providerId: number;
+  providerId: string; // Changed from number to string
 }
 
 export default function FoodForm({
@@ -58,6 +59,8 @@ export default function FoodForm({
   isLoading = false,
   providerId,
 }: FoodFormProps) {
+  const { toast } = useToast();
+  
   // Format date to YYYY-MM-DD format for input
   const formatDateForInput = (date: Date | undefined) => {
     if (!date) return '';
@@ -78,17 +81,26 @@ export default function FoodForm({
   });
 
   const handleSubmit = (values: FormData) => {
-    onSubmit({
-      name: values.name,
-      providerId: providerId,
-      providerName: initialData?.providerName || '',
-      category: values.category as FoodCategory,
-      quantity: values.quantity,
-      quantityUnit: values.quantityUnit,
-      expiryDate: new Date(values.expiryDate),
-      description: values.description,
-      pickupInstructions: values.pickupInstructions,
-    });
+    try {
+      onSubmit({
+        name: values.name,
+        providerId: providerId,
+        providerName: initialData?.providerName || '',
+        category: values.category as FoodCategory,
+        quantity: values.quantity,
+        quantityUnit: values.quantityUnit,
+        expiryDate: new Date(values.expiryDate),
+        description: values.description,
+        pickupInstructions: values.pickupInstructions,
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit form. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

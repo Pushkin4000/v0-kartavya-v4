@@ -6,26 +6,43 @@ import { Input } from '@/components/ui/input';
 import { CartItem as CartItemType } from '@/lib/types';
 import FoodCategoryBadge from '@/components/common/FoodCategoryBadge';
 import ExpiryBadge from '@/components/common/ExpiryBadge';
+import { useToast } from '@/hooks/use-toast';
 
 interface CartItemProps {
   item: CartItemType;
-  onUpdateQuantity: (id: number, quantity: number) => void;
-  onRemove: (id: number) => void;
+  onUpdateQuantity: (id: string, quantity: number) => void;
+  onRemove: (id: string) => void;
 }
 
 export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
   const [quantity, setQuantity] = useState(item.quantity);
+  const { toast } = useToast();
   const foodItem = item.foodItem!;
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newQuantity = parseInt(e.target.value);
     if (!isNaN(newQuantity) && newQuantity > 0 && newQuantity <= foodItem.quantity) {
       setQuantity(newQuantity);
+    } else {
+      toast({
+        title: "Invalid quantity",
+        description: `Quantity must be between 1 and ${foodItem.quantity}`,
+        variant: "destructive"
+      });
     }
   };
 
   const handleUpdateQuantity = () => {
-    onUpdateQuantity(item.id, quantity);
+    try {
+      onUpdateQuantity(item.id, quantity);
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update quantity. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleBlur = () => {
@@ -37,6 +54,19 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleUpdateQuantity();
+    }
+  };
+
+  const handleRemove = () => {
+    try {
+      onRemove(item.id);
+    } catch (error) {
+      console.error("Error removing item:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -71,7 +101,7 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => onRemove(item.id)}
+        onClick={handleRemove}
         className="h-8 w-8 text-gray-500 hover:text-red-500"
       >
         <X className="h-4 w-4" />

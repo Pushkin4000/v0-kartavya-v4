@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Create a new user (in a real app, this would be saved to DB)
       const newUser: User = {
-        id: mockUsers.length + 1,
+        id: `mock-${Date.now()}`, // Generate a string ID instead of a number
         username: userData.username!,
         name: userData.name!,
         email: userData.email!,

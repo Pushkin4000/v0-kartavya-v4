@@ -7,16 +7,15 @@ import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { cartService } from '@/lib/cart-service';
 import { orderService } from '@/lib/order-service';
-import { CartItem } from '@/lib/types';
+import { CartItem as CartItemType } from '@/lib/types';
 import OrderForm from '@/components/orders/OrderForm';
-import CartItem from '@/components/cart/CartItem';
 import EmptyState from '@/components/common/EmptyState';
 
 export default function CheckoutPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItemType[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
