@@ -12,6 +12,12 @@ import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import BrowseFoodPage from "./pages/BrowseFoodPage";
 import CartPage from "./pages/CartPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import OrdersPage from "./pages/OrdersPage";
+import OrderDetailsPage from "./pages/OrderDetailsPage";
+import NewListingPage from "./pages/NewListingPage";
+import MyListingsPage from "./pages/MyListingsPage";
+import EditListingPage from "./pages/EditListingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +61,16 @@ const App = () => (
                 <DashboardPage />
               </ProtectedRoute>
             } />
+            <Route path="/orders" element={
+              <ProtectedRoute>
+                <OrdersPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/orders/:id" element={
+              <ProtectedRoute>
+                <OrderDetailsPage />
+              </ProtectedRoute>
+            } />
             
             {/* Protected routes for NGOs */}
             <Route path="/browse" element={
@@ -67,8 +83,28 @@ const App = () => (
                 <CartPage />
               </ProtectedRoute>
             } />
+            <Route path="/checkout" element={
+              <ProtectedRoute requiredUserType="ngo">
+                <CheckoutPage />
+              </ProtectedRoute>
+            } />
             
-            {/* Add other routes here */}
+            {/* Protected routes for Providers */}
+            <Route path="/new-listing" element={
+              <ProtectedRoute requiredUserType="provider">
+                <NewListingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-listings" element={
+              <ProtectedRoute requiredUserType="provider">
+                <MyListingsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/my-listings/:id/edit" element={
+              <ProtectedRoute requiredUserType="provider">
+                <EditListingPage />
+              </ProtectedRoute>
+            } />
             
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />

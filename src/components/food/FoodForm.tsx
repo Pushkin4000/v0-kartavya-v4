@@ -46,7 +46,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface FoodFormProps {
-  onSubmit: (data: Omit<FoodItem, 'id' | 'providerId' | 'status' | 'createdAt'>) => void;
+  onSubmit: (data: Omit<FoodItem, 'id' | 'status' | 'createdAt'>) => void;
   initialData?: Partial<FoodItem>;
   isLoading?: boolean;
   providerId: number;
@@ -80,7 +80,8 @@ export default function FoodForm({
   const handleSubmit = (values: FormData) => {
     onSubmit({
       name: values.name,
-      providerId,
+      providerId: providerId,
+      providerName: initialData?.providerName || '',
       category: values.category as FoodCategory,
       quantity: values.quantity,
       quantityUnit: values.quantityUnit,

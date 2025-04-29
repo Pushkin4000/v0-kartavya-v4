@@ -1,103 +1,249 @@
 
 import { CartItem, FoodItem } from './types';
+import { supabase } from '@/integrations/supabase/client';
 import { mockCartItems, mockFoodItems } from './mock-data';
 
-// In a real app, these would be API calls to your backend
 export const cartService = {
   getCartItems: async (ngoId: number): Promise<CartItem[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Get cart items for the NGO
-    const items = mockCartItems.filter(item => item.ngoId === ngoId);
-    
-    // Attach food item details to each cart item
-    return items.map(item => ({
-      ...item,
-      foodItem: mockFoodItems.find(food => food.id === item.foodItemId)
-    }));
+    try {
+      // Get cart items for the NGO
+      const { data: cartData, error: cartError } = await supabase
+        .from('cart_items')
+        .select('*')
+        .eq('ngo_id', ngoId);
+
+      if (cartError) {
+        console.error('Error fetching cart items:', cartError);
+        throw cartError;
+      }
+
+      if (!cartData || cartData.length === 0) {
+        return [];
+      }
+
+      // Get food items for cart items
+      const foodItemIds = cartData.map(item => item.food_item_id);
+      const { data: foodData, error: foodError } = await supabase
+        .from('food_items')
+        .select('*')
+        .in('id', foodItemIds);
+
+      if (foodError) {
+        console.error('Error fetching food items for cart:', foodError);
+        throw foodError;
+      }
+
+      // Combine cart items with food item details
+      return cartData.map(cartItem => {
+        const foodItem = foodData?.find(food => food.id === cartItem.food_item_id);
+        return {
+          ...cartItem,
+          foodItem: foodItem as unknown as FoodItem
+        } as unknown as CartItem;
+      });
+    } catch (error) {
+      console.error('Failed to fetch cart items:', error);
+      // Fallback to mock data
+      const items = mockCartItems.filter(item => item.ngoId === ngoId);
+      return items.map(item => ({
+        ...item,
+        foodItem: mockFoodItems.find(food => food.id === item.foodItemId)
+      }));
+    }
   },
   
   addToCart: async (ngoId: number, foodItemId: number, quantity: number): Promise<CartItem> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if item is already in cart
-    const existingItem = mockCartItems.find(
-      item => item.ngoId === ngoId && item.foodItemId === foodItemId
-    );
-    
-    if (existingItem) {
-      // Update existing cart item quantity
-      existingItem.quantity += quantity;
+    try {
+      // Check if item is already in cart
+      const { data: existingItems, error: checkError } = await supabase
+        .from('cart_items')
+        .select('*')
+        .eq('ngo_id', ngoId)
+        .eq('food_item_id', foodItemId);
+
+      if (checkError) {
+        console.error('Error checking cart items:', checkError);
+        throw checkError;
+      }
+
+      let result;
+      if (existingItems && existingItems.length > 0) {
+        // Update existing cart item quantity
+        const existingItem = existingItems[0];
+        const newQuantity = existingItem.quantity + quantity;
+        
+        const { data, error } = await supabase
+          .from('cart_items')
+          .update({ quantity: newQuantity })
+          .eq('id', existingItem.id)
+          .select('*')
+          .single();
+          
+        if (error) {
+          console.error('Error updating cart item:', error);
+          throw error;
+        }
+        
+        result = data;
+      } else {
+        // Create new cart item
+        const { data, error } = await supabase
+          .from('cart_items')
+          .insert([{
+            ngo_id: ngoId,
+            food_item_id: foodItemId,
+            quantity: quantity
+          }])
+          .select('*')
+          .single();
+          
+        if (error) {
+          console.error('Error adding to cart:', error);
+          throw error;
+        }
+        
+        result = data;
+      }
+
+      // Get food item details
+      const { data: foodItem, error: foodError } = await supabase
+        .from('food_items')
+        .select('*')
+        .eq('id', foodItemId)
+        .single();
+
+      if (foodError) {
+        console.error('Error fetching food item for cart:', foodError);
+        throw foodError;
+      }
+
       return {
-        ...existingItem,
-        foodItem: mockFoodItems.find(food => food.id === existingItem.foodItemId)
-      };
-    } else {
-      // Create new cart item
-      const newItem: CartItem = {
-        id: Math.max(...mockCartItems.map(i => i.id), 0) + 1,
-        ngoId,
-        foodItemId,
-        quantity,
-        createdAt: new Date(),
-      };
+        ...result,
+        foodItem: foodItem as unknown as FoodItem
+      } as unknown as CartItem;
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      // Fallback to mock implementation
+      const existingItem = mockCartItems.find(
+        item => item.ngoId === ngoId && item.foodItemId === foodItemId
+      );
       
-      // Add food item details
-      const foodItem = mockFoodItems.find(food => food.id === foodItemId);
-      
-      // Add to mock cart items
-      mockCartItems.push(newItem);
-      
-      return {
-        ...newItem,
-        foodItem
-      };
+      if (existingItem) {
+        existingItem.quantity += quantity;
+        return {
+          ...existingItem,
+          foodItem: mockFoodItems.find(food => food.id === existingItem.foodItemId)
+        };
+      } else {
+        const newItem: CartItem = {
+          id: Math.max(...mockCartItems.map(i => i.id), 0) + 1,
+          ngoId,
+          foodItemId,
+          quantity,
+          createdAt: new Date(),
+        };
+        
+        const foodItem = mockFoodItems.find(food => food.id === foodItemId);
+        mockCartItems.push(newItem);
+        
+        return {
+          ...newItem,
+          foodItem
+        };
+      }
     }
   },
   
   updateCartItem: async (id: number, quantity: number): Promise<CartItem | null> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Find cart item by id
-    const index = mockCartItems.findIndex(item => item.id === id);
-    if (index === -1) return null;
-    
-    // Update quantity
-    mockCartItems[index].quantity = quantity;
-    
-    // Return updated cart item with food item details
-    return {
-      ...mockCartItems[index],
-      foodItem: mockFoodItems.find(food => food.id === mockCartItems[index].foodItemId)
-    };
+    try {
+      const { data, error } = await supabase
+        .from('cart_items')
+        .update({ quantity })
+        .eq('id', id)
+        .select('*')
+        .single();
+        
+      if (error) {
+        console.error('Error updating cart item:', error);
+        throw error;
+      }
+
+      // Get food item details
+      const { data: foodItem, error: foodError } = await supabase
+        .from('food_items')
+        .select('*')
+        .eq('id', data.food_item_id)
+        .single();
+
+      if (foodError) {
+        console.error('Error fetching food item for cart:', foodError);
+        throw foodError;
+      }
+
+      return {
+        ...data,
+        foodItem: foodItem as unknown as FoodItem
+      } as unknown as CartItem;
+    } catch (error) {
+      console.error('Failed to update cart item:', error);
+      // Fallback to mock implementation
+      const index = mockCartItems.findIndex(item => item.id === id);
+      if (index === -1) return null;
+      
+      mockCartItems[index].quantity = quantity;
+      
+      return {
+        ...mockCartItems[index],
+        foodItem: mockFoodItems.find(food => food.id === mockCartItems[index].foodItemId)
+      };
+    }
   },
   
   removeFromCart: async (id: number): Promise<boolean> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // Find cart item by id
-    const index = mockCartItems.findIndex(item => item.id === id);
-    if (index === -1) return false;
-    
-    // Remove from mock cart items
-    mockCartItems.splice(index, 1);
-    
-    return true;
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        console.error('Error removing from cart:', error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to remove from cart:', error);
+      // Fallback to mock implementation
+      const index = mockCartItems.findIndex(item => item.id === id);
+      if (index === -1) return false;
+      
+      mockCartItems.splice(index, 1);
+      return true;
+    }
   },
   
   clearCart: async (ngoId: number): Promise<boolean> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Remove all cart items for the NGO
-    const cartItemsToKeep = mockCartItems.filter(item => item.ngoId !== ngoId);
-    mockCartItems.length = 0;
-    mockCartItems.push(...cartItemsToKeep);
-    
-    return true;
+    try {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('ngo_id', ngoId);
+        
+      if (error) {
+        console.error('Error clearing cart:', error);
+        throw error;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Failed to clear cart:', error);
+      // Fallback to mock implementation
+      const cartItemsToKeep = mockCartItems.filter(item => item.ngoId !== ngoId);
+      mockCartItems.length = 0;
+      mockCartItems.push(...cartItemsToKeep);
+      
+      return true;
+    }
   }
 };

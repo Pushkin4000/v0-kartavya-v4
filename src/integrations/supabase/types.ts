@@ -9,7 +9,233 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      cart_items: {
+        Row: {
+          created_at: string
+          food_item_id: string
+          id: string
+          ngo_id: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string
+          food_item_id: string
+          id?: string
+          ngo_id: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string
+          food_item_id?: string
+          id?: string
+          ngo_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_ngo_id_fkey"
+            columns: ["ngo_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      food_items: {
+        Row: {
+          category: Database["public"]["Enums"]["food_category"]
+          created_at: string
+          description: string | null
+          expiry_date: string
+          id: string
+          name: string
+          pickup_instructions: string | null
+          provider_id: string
+          provider_name: string
+          quantity: number
+          quantity_unit: string
+          status: Database["public"]["Enums"]["food_status"]
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["food_category"]
+          created_at?: string
+          description?: string | null
+          expiry_date: string
+          id?: string
+          name: string
+          pickup_instructions?: string | null
+          provider_id: string
+          provider_name: string
+          quantity: number
+          quantity_unit: string
+          status?: Database["public"]["Enums"]["food_status"]
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["food_category"]
+          created_at?: string
+          description?: string | null
+          expiry_date?: string
+          id?: string
+          name?: string
+          pickup_instructions?: string | null
+          provider_id?: string
+          provider_name?: string
+          quantity?: number
+          quantity_unit?: string
+          status?: Database["public"]["Enums"]["food_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "food_items_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          food_item_id: string
+          id: string
+          order_id: string
+          provider_id: string
+          provider_name: string
+          quantity: number
+        }
+        Insert: {
+          food_item_id: string
+          id?: string
+          order_id: string
+          provider_id: string
+          provider_name: string
+          quantity: number
+        }
+        Update: {
+          food_item_id?: string
+          id?: string
+          order_id?: string
+          provider_id?: string
+          provider_name?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_food_item_id_fkey"
+            columns: ["food_item_id"]
+            isOneToOne: false
+            referencedRelation: "food_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          contact_person: string
+          contact_phone: string
+          created_at: string
+          id: string
+          ngo_id: string
+          ngo_name: string
+          notes: string | null
+          pickup_time: string
+          status: Database["public"]["Enums"]["order_status"]
+        }
+        Insert: {
+          contact_person: string
+          contact_phone: string
+          created_at?: string
+          id?: string
+          ngo_id: string
+          ngo_name: string
+          notes?: string | null
+          pickup_time: string
+          status?: Database["public"]["Enums"]["order_status"]
+        }
+        Update: {
+          contact_person?: string
+          contact_phone?: string
+          created_at?: string
+          id?: string
+          ngo_id?: string
+          ngo_name?: string
+          notes?: string | null
+          pickup_time?: string
+          status?: Database["public"]["Enums"]["order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_ngo_id_fkey"
+            columns: ["ngo_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          people_served: number | null
+          phone: string | null
+          provider_type: string | null
+          registration_number: string | null
+          user_type: Database["public"]["Enums"]["user_type"]
+          username: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          people_served?: number | null
+          phone?: string | null
+          provider_type?: string | null
+          registration_number?: string | null
+          user_type: Database["public"]["Enums"]["user_type"]
+          username: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          people_served?: number | null
+          phone?: string | null
+          provider_type?: string | null
+          registration_number?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"]
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +244,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      food_category:
+        | "prepared"
+        | "grocery"
+        | "produce"
+        | "bakery"
+        | "dairy"
+        | "other"
+      food_status: "available" | "claimed" | "expired"
+      order_status: "placed" | "confirmed" | "ready" | "completed" | "cancelled"
+      user_type: "provider" | "ngo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +368,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      food_category: [
+        "prepared",
+        "grocery",
+        "produce",
+        "bakery",
+        "dairy",
+        "other",
+      ],
+      food_status: ["available", "claimed", "expired"],
+      order_status: ["placed", "confirmed", "ready", "completed", "cancelled"],
+      user_type: ["provider", "ngo"],
+    },
   },
 } as const
