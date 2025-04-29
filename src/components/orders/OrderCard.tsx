@@ -3,7 +3,7 @@ import React from 'react';
 import { Calendar, Clock } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Order, UserType } from '@/lib/types';
+import { Order, UserType, OrderStatus } from '@/lib/types';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -11,10 +11,10 @@ import { Link } from 'react-router-dom';
 interface OrderCardProps {
   order: Order;
   userType: UserType;
-  onStatusChange?: (orderId: number, status: string) => void;
+  onUpdateStatus?: (orderId: string, status: OrderStatus) => void;
 }
 
-export default function OrderCard({ order, userType, onStatusChange }: OrderCardProps) {
+export default function OrderCard({ order, userType, onUpdateStatus }: OrderCardProps) {
   const totalItems = order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
   const uniqueItems = order.items?.length || 0;
   
@@ -53,8 +53,8 @@ export default function OrderCard({ order, userType, onStatusChange }: OrderCard
   };
   
   const handleStatusChange = () => {
-    if (nextStatus && onStatusChange) {
-      onStatusChange(order.id, nextStatus);
+    if (nextStatus && onUpdateStatus) {
+      onUpdateStatus(order.id, nextStatus);
     }
   };
 
@@ -63,7 +63,7 @@ export default function OrderCard({ order, userType, onStatusChange }: OrderCard
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="font-semibold">Order #{order.id}</h3>
+            <h3 className="font-semibold">Order #{order.id.slice(0, 8)}</h3>
             <p className="text-sm text-gray-500">
               {userType === 'provider' ? order.ngoName : 'Your order'}
             </p>

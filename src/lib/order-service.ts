@@ -4,8 +4,50 @@ import { supabase } from '@/integrations/supabase/client';
 import { mockOrders, mockOrderItems, mockFoodItems } from './mock-data';
 import { cartService } from './cart-service';
 
+// Helper function to map Supabase data to our app's Order type
+const mapOrderFromSupabase = (order: any, orderItems: any[] = []): Order => {
+  return {
+    id: order.id,
+    ngoId: order.ngo_id,
+    ngoName: order.ngo_name,
+    status: order.status,
+    contactPerson: order.contact_person,
+    contactPhone: order.contact_phone,
+    pickupTime: new Date(order.pickup_time),
+    notes: order.notes,
+    createdAt: new Date(order.created_at),
+    items: orderItems.map(mapOrderItemFromSupabase)
+  };
+};
+
+// Helper function to map Supabase data to our app's OrderItem type
+const mapOrderItemFromSupabase = (item: any): OrderItem => {
+  return {
+    id: item.id,
+    orderId: item.order_id,
+    foodItemId: item.food_item_id,
+    providerId: item.provider_id,
+    providerName: item.provider_name,
+    quantity: item.quantity,
+    foodItem: item.foodItem ? {
+      id: item.foodItem.id,
+      name: item.foodItem.name,
+      providerId: item.foodItem.provider_id,
+      providerName: item.foodItem.provider_name,
+      category: item.foodItem.category,
+      quantity: item.foodItem.quantity,
+      quantityUnit: item.foodItem.quantity_unit,
+      expiryDate: new Date(item.foodItem.expiry_date),
+      description: item.foodItem.description,
+      pickupInstructions: item.foodItem.pickup_instructions,
+      status: item.foodItem.status,
+      createdAt: new Date(item.foodItem.created_at)
+    } : undefined
+  };
+};
+
 export const orderService = {
-  getOrders: async (userId: number, userType: 'provider' | 'ngo'): Promise<Order[]> => {
+  getOrders: async (userId: string, userType: 'provider' | 'ngo'): Promise<Order[]> => {
     try {
       let orders;
       
@@ -59,10 +101,7 @@ export const orderService = {
       if (itemsError) throw itemsError;
       
       if (!orderItems) {
-        return orders.map(order => ({
-          ...order,
-          items: []
-        }));
+        return orders.map(order => mapOrderFromSupabase(order, []));
       }
       
       // Get food items for the order items
@@ -76,15 +115,16 @@ export const orderService = {
       if (foodError) throw foodError;
       
       // Attach order items to each order
-      return orders.map(order => ({
-        ...order,
-        items: orderItems
+      return orders.map(order => {
+        const orderItemsForOrder = orderItems
           .filter(item => item.order_id === order.id)
-          .map(item => ({
-            ...item,
-            foodItem: foodItems?.find(food => food.id === item.food_item_id)
-          }))
-      }));
+          .map(item => {
+            const foodItem = foodItems?.find(food => food.id === item.food_item_id);
+            return { ...item, foodItem };
+          });
+          
+        return mapOrderFromSupabase(order, orderItemsForOrder);
+      });
     } catch (error) {
       console.error('Failed to fetch orders:', error);
       // Fallback to mock implementation
@@ -112,7 +152,7 @@ export const orderService = {
     }
   },
   
-  getOrder: async (id: number): Promise<Order | null> => {
+  getOrder: async (id: string): Promise<Order | null> => {
     try {
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -130,10 +170,7 @@ export const orderService = {
       if (itemsError) throw itemsError;
       
       if (!orderItems || orderItems.length === 0) {
-        return {
-          ...order,
-          items: []
-        };
+        return mapOrderFromSupabase(order, []);
       }
       
       const foodItemIds = orderItems.map(item => item.food_item_id);
@@ -145,13 +182,12 @@ export const orderService = {
         
       if (foodError) throw foodError;
       
-      return {
-        ...order,
-        items: orderItems.map(item => ({
-          ...item,
-          foodItem: foodItems?.find(food => food.id === item.food_item_id)
-        }))
-      };
+      const orderItemsWithFood = orderItems.map(item => {
+        const foodItem = foodItems?.find(food => food.id === item.food_item_id);
+        return { ...item, foodItem };
+      });
+      
+      return mapOrderFromSupabase(order, orderItemsWithFood);
     } catch (error) {
       console.error('Failed to fetch order:', error);
       // Fallback to mock implementation
@@ -169,7 +205,7 @@ export const orderService = {
   },
   
   createOrder: async (
-    ngoId: number,
+    ngoId: string,
     ngoName: string,
     contactPerson: string,
     contactPhone: string,
@@ -180,15 +216,15 @@ export const orderService = {
       // 1. Create the order
       const { data: newOrder, error: orderError } = await supabase
         .from('orders')
-        .insert([{
+        .insert({
           ngo_id: ngoId,
           ngo_name: ngoName,
           contact_person: contactPerson,
           contact_phone: contactPhone,
-          pickup_time: pickupTime,
+          pickup_time: pickupTime.toISOString(),
           notes: notes,
           status: 'placed'
-        }])
+        })
         .select('*')
         .single();
         
@@ -198,14 +234,11 @@ export const orderService = {
       const cartItems = await cartService.getCartItems(ngoId);
       
       if (cartItems.length === 0) {
-        return {
-          ...newOrder,
-          items: []
-        };
+        return mapOrderFromSupabase(newOrder, []);
       }
       
       // 3. Create order items
-      const orderItems = cartItems.map(cartItem => {
+      const orderItemsToInsert = cartItems.map(cartItem => {
         const foodItem = cartItem.foodItem!;
         
         return {
@@ -219,7 +252,7 @@ export const orderService = {
       
       const { data: createdOrderItems, error: itemsError } = await supabase
         .from('order_items')
-        .insert(orderItems)
+        .insert(orderItemsToInsert)
         .select('*');
         
       if (itemsError) throw itemsError;
@@ -227,20 +260,26 @@ export const orderService = {
       // 4. Clear the cart
       await cartService.clearCart(ngoId);
       
-      return {
-        ...newOrder,
-        items: createdOrderItems.map(item => ({
+      // Map order items with food items
+      const orderItemsWithFood = createdOrderItems.map(item => {
+        const correspondingCartItem = cartItems.find(cartItem => 
+          cartItem.foodItemId === item.food_item_id
+        );
+        
+        return {
           ...item,
-          foodItem: cartItems.find(cartItem => cartItem.foodItemId === item.food_item_id)?.foodItem
-        }))
-      };
+          foodItem: correspondingCartItem?.foodItem
+        };
+      });
+      
+      return mapOrderFromSupabase(newOrder, orderItemsWithFood);
     } catch (error) {
       console.error('Failed to create order:', error);
       // Fallback to mock implementation
       const cartItems = await cartService.getCartItems(ngoId);
       
       const newOrder: Order = {
-        id: Math.max(...mockOrders.map(o => o.id), 0) + 1,
+        id: `mock-${Date.now()}`,
         ngoId,
         ngoName,
         status: 'placed',
@@ -256,7 +295,7 @@ export const orderService = {
         const foodItem = mockFoodItems.find(food => food.id === cartItem.foodItemId)!;
         
         return {
-          id: Math.max(...mockOrderItems.map(i => i.id), 0) + index + 1,
+          id: `mock-item-${Date.now()}-${index}`,
           orderId: newOrder.id,
           foodItemId: cartItem.foodItemId,
           foodItem,
@@ -277,7 +316,7 @@ export const orderService = {
     }
   },
   
-  updateOrderStatus: async (id: number, status: OrderStatus): Promise<Order | null> => {
+  updateOrderStatus: async (id: string, status: OrderStatus): Promise<Order | null> => {
     try {
       const { data, error } = await supabase
         .from('orders')

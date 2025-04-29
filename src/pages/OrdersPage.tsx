@@ -6,7 +6,7 @@ import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { orderService } from '@/lib/order-service';
-import { Order } from '@/lib/types';
+import { Order, OrderStatus } from '@/lib/types';
 import OrderCard from '@/components/orders/OrderCard';
 import EmptyState from '@/components/common/EmptyState';
 
@@ -43,7 +43,7 @@ export default function OrdersPage() {
     fetchOrders();
   }, []);
   
-  const handleUpdateStatus = async (id: number, status: 'placed' | 'confirmed' | 'ready' | 'completed' | 'cancelled') => {
+  const handleUpdateStatus = async (id: string, status: OrderStatus) => {
     try {
       const updatedOrder = await orderService.updateOrderStatus(id, status);
       if (updatedOrder) {

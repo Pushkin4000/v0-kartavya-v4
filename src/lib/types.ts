@@ -5,7 +5,7 @@ export type FoodStatus = 'available' | 'claimed' | 'expired';
 export type OrderStatus = 'placed' | 'confirmed' | 'ready' | 'completed' | 'cancelled';
 
 export interface User {
-  id: number;
+  id: string; // Changed from number to string for UUID compatibility
   username: string;
   name: string;
   email: string;
@@ -19,9 +19,9 @@ export interface User {
 }
 
 export interface FoodItem {
-  id: number;
+  id: string; // Changed from number to string for UUID compatibility
   name: string;
-  providerId: number;
+  providerId: string; // Changed from number to string for UUID compatibility
   providerName?: string;
   category: FoodCategory;
   quantity: number;
@@ -34,17 +34,17 @@ export interface FoodItem {
 }
 
 export interface CartItem {
-  id: number;
-  ngoId: number;
-  foodItemId: number;
+  id: string; // Changed from number to string for UUID compatibility
+  ngoId: string; // Changed from number to string for UUID compatibility
+  foodItemId: string; // Changed from number to string for UUID compatibility
   foodItem?: FoodItem;
   quantity: number;
   createdAt: Date;
 }
 
 export interface Order {
-  id: number;
-  ngoId: number;
+  id: string; // Changed from number to string for UUID compatibility
+  ngoId: string; // Changed from number to string for UUID compatibility
   ngoName?: string;
   status: OrderStatus;
   contactPerson: string;
@@ -56,11 +56,11 @@ export interface Order {
 }
 
 export interface OrderItem {
-  id: number;
-  orderId: number;
-  foodItemId: number;
+  id: string; // Changed from number to string for UUID compatibility
+  orderId: string; // Changed from number to string for UUID compatibility
+  foodItemId: string; // Changed from number to string for UUID compatibility
   foodItem?: FoodItem;
-  providerId: number;
+  providerId: string; // Changed from number to string for UUID compatibility
   providerName?: string;
   quantity: number;
 }

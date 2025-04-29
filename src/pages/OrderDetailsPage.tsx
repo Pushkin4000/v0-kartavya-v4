@@ -7,7 +7,7 @@ import PageLayout from '@/components/layout/PageLayout';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { orderService } from '@/lib/order-service';
-import { Order } from '@/lib/types';
+import { Order, OrderStatus } from '@/lib/types';
 import OrderStatusBadge from '@/components/common/OrderStatusBadge';
 import FoodCategoryBadge from '@/components/common/FoodCategoryBadge';
 
@@ -31,7 +31,7 @@ export default function OrderDetailsPage() {
       
       try {
         setLoading(true);
-        const data = await orderService.getOrder(parseInt(id));
+        const data = await orderService.getOrder(id);
         
         if (!data) {
           toast({
@@ -70,11 +70,11 @@ export default function OrderDetailsPage() {
     fetchOrder();
   }, [id]);
   
-  const handleUpdateStatus = async (status: 'placed' | 'confirmed' | 'ready' | 'completed' | 'cancelled') => {
+  const handleUpdateStatus = async (status: OrderStatus) => {
     if (!id || !order) return;
     
     try {
-      const updatedOrder = await orderService.updateOrderStatus(parseInt(id), status);
+      const updatedOrder = await orderService.updateOrderStatus(id, status);
       if (updatedOrder) {
         setOrder(updatedOrder);
         
@@ -116,7 +116,7 @@ export default function OrderDetailsPage() {
         </Button>
         
         <h1 className="text-3xl font-heading font-bold mb-2">
-          Order #{id}
+          Order #{id ? id.slice(0, 8) : ''}
         </h1>
         <p className="text-gray-600">
           View details and manage order status.

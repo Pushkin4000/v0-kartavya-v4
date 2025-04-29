@@ -3,8 +3,33 @@ import { CartItem, FoodItem } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { mockCartItems, mockFoodItems } from './mock-data';
 
+// Helper function to map Supabase data to our app's CartItem type
+const mapCartItemFromSupabase = (cartItem: any, foodItem?: any): CartItem => {
+  return {
+    id: cartItem.id,
+    ngoId: cartItem.ngo_id,
+    foodItemId: cartItem.food_item_id,
+    quantity: cartItem.quantity,
+    createdAt: new Date(cartItem.created_at),
+    foodItem: foodItem ? {
+      id: foodItem.id,
+      name: foodItem.name,
+      providerId: foodItem.provider_id,
+      providerName: foodItem.provider_name,
+      category: foodItem.category,
+      quantity: foodItem.quantity,
+      quantityUnit: foodItem.quantity_unit,
+      expiryDate: new Date(foodItem.expiry_date),
+      description: foodItem.description,
+      pickupInstructions: foodItem.pickup_instructions,
+      status: foodItem.status,
+      createdAt: new Date(foodItem.created_at)
+    } : undefined
+  };
+};
+
 export const cartService = {
-  getCartItems: async (ngoId: number): Promise<CartItem[]> => {
+  getCartItems: async (ngoId: string): Promise<CartItem[]> => {
     try {
       // Get cart items for the NGO
       const { data: cartData, error: cartError } = await supabase
@@ -36,10 +61,7 @@ export const cartService = {
       // Combine cart items with food item details
       return cartData.map(cartItem => {
         const foodItem = foodData?.find(food => food.id === cartItem.food_item_id);
-        return {
-          ...cartItem,
-          foodItem: foodItem as unknown as FoodItem
-        } as unknown as CartItem;
+        return mapCartItemFromSupabase(cartItem, foodItem);
       });
     } catch (error) {
       console.error('Failed to fetch cart items:', error);
@@ -52,7 +74,7 @@ export const cartService = {
     }
   },
   
-  addToCart: async (ngoId: number, foodItemId: number, quantity: number): Promise<CartItem> => {
+  addToCart: async (ngoId: string, foodItemId: string, quantity: number): Promise<CartItem> => {
     try {
       // Check if item is already in cart
       const { data: existingItems, error: checkError } = await supabase
@@ -89,11 +111,11 @@ export const cartService = {
         // Create new cart item
         const { data, error } = await supabase
           .from('cart_items')
-          .insert([{
+          .insert({
             ngo_id: ngoId,
             food_item_id: foodItemId,
             quantity: quantity
-          }])
+          })
           .select('*')
           .single();
           
@@ -117,10 +139,7 @@ export const cartService = {
         throw foodError;
       }
 
-      return {
-        ...result,
-        foodItem: foodItem as unknown as FoodItem
-      } as unknown as CartItem;
+      return mapCartItemFromSupabase(result, foodItem);
     } catch (error) {
       console.error('Failed to add to cart:', error);
       // Fallback to mock implementation
@@ -136,7 +155,7 @@ export const cartService = {
         };
       } else {
         const newItem: CartItem = {
-          id: Math.max(...mockCartItems.map(i => i.id), 0) + 1,
+          id: `mock-${Date.now()}`,
           ngoId,
           foodItemId,
           quantity,
@@ -154,7 +173,7 @@ export const cartService = {
     }
   },
   
-  updateCartItem: async (id: number, quantity: number): Promise<CartItem | null> => {
+  updateCartItem: async (id: string, quantity: number): Promise<CartItem | null> => {
     try {
       const { data, error } = await supabase
         .from('cart_items')
@@ -180,10 +199,7 @@ export const cartService = {
         throw foodError;
       }
 
-      return {
-        ...data,
-        foodItem: foodItem as unknown as FoodItem
-      } as unknown as CartItem;
+      return mapCartItemFromSupabase(data, foodItem);
     } catch (error) {
       console.error('Failed to update cart item:', error);
       // Fallback to mock implementation
@@ -199,7 +215,7 @@ export const cartService = {
     }
   },
   
-  removeFromCart: async (id: number): Promise<boolean> => {
+  removeFromCart: async (id: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('cart_items')
@@ -223,7 +239,7 @@ export const cartService = {
     }
   },
   
-  clearCart: async (ngoId: number): Promise<boolean> => {
+  clearCart: async (ngoId: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('cart_items')

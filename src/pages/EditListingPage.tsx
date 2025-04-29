@@ -34,7 +34,7 @@ export default function EditListingPage() {
       
       try {
         setLoading(true);
-        const item = await foodService.getFoodItem(parseInt(id));
+        const item = await foodService.getFoodItem(id);
         
         if (!item) {
           toast({
@@ -79,9 +79,9 @@ export default function EditListingPage() {
     try {
       setIsSubmitting(true);
       
-      await foodService.updateFoodItem(parseInt(id), {
+      await foodService.updateFoodItem(id, {
         ...data,
-        id: parseInt(id),
+        id: id,
       });
       
       toast({

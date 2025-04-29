@@ -29,7 +29,7 @@ export default function MyListingsPage() {
   const { toast } = useToast();
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   
   // Redirect if not logged in or not a provider
   if (!user) {
@@ -62,7 +62,7 @@ export default function MyListingsPage() {
     fetchFoodItems();
   }, []);
   
-  const handleDeleteItem = async (id: number) => {
+  const handleDeleteItem = async (id: string) => {
     try {
       const success = await foodService.deleteFoodItem(id);
       if (success) {

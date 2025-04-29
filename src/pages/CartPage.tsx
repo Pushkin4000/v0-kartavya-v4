@@ -48,7 +48,7 @@ export default function CartPage() {
   }, []);
   
   // Update item quantity
-  const handleUpdateQuantity = async (id: number, quantity: number) => {
+  const handleUpdateQuantity = async (id: string, quantity: number) => {
     try {
       const updatedItem = await cartService.updateCartItem(id, quantity);
       if (updatedItem) {
@@ -71,7 +71,7 @@ export default function CartPage() {
   };
   
   // Remove item from cart
-  const handleRemoveItem = async (id: number) => {
+  const handleRemoveItem = async (id: string) => {
     try {
       const success = await cartService.removeFromCart(id);
       if (success) {

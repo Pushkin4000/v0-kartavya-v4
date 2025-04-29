@@ -4,6 +4,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './auth-context';
 import { mockFoodItems } from './mock-data';
 
+// Helper function to convert Supabase food item to our app's FoodItem type
+const mapFoodItemFromSupabase = (item: any): FoodItem => {
+  return {
+    id: item.id,
+    name: item.name,
+    providerId: item.provider_id,
+    providerName: item.provider_name,
+    category: item.category,
+    quantity: item.quantity,
+    quantityUnit: item.quantity_unit,
+    expiryDate: new Date(item.expiry_date),
+    description: item.description,
+    pickupInstructions: item.pickup_instructions,
+    status: item.status,
+    createdAt: new Date(item.created_at)
+  };
+};
+
 export const foodService = {
   getAllFoodItems: async (): Promise<FoodItem[]> => {
     try {
@@ -18,7 +36,7 @@ export const foodService = {
         throw error;
       }
 
-      return data || [];
+      return data ? data.map(mapFoodItemFromSupabase) : [];
     } catch (error) {
       console.error('Failed to fetch food items:', error);
       // Fallback to mock data in case of error
@@ -26,7 +44,7 @@ export const foodService = {
     }
   },
   
-  getFoodItemsByProvider: async (providerId: number): Promise<FoodItem[]> => {
+  getFoodItemsByProvider: async (providerId: string): Promise<FoodItem[]> => {
     try {
       const { data, error } = await supabase
         .from('food_items')
@@ -39,7 +57,7 @@ export const foodService = {
         throw error;
       }
 
-      return data || [];
+      return data ? data.map(mapFoodItemFromSupabase) : [];
     } catch (error) {
       console.error('Failed to fetch provider food items:', error);
       // Fallback to mock data in case of error
@@ -47,7 +65,7 @@ export const foodService = {
     }
   },
   
-  getFoodItem: async (id: number): Promise<FoodItem | null> => {
+  getFoodItem: async (id: string): Promise<FoodItem | null> => {
     try {
       const { data, error } = await supabase
         .from('food_items')
@@ -60,7 +78,7 @@ export const foodService = {
         throw error;
       }
 
-      return data || null;
+      return data ? mapFoodItemFromSupabase(data) : null;
     } catch (error) {
       console.error('Failed to fetch food item:', error);
       // Fallback to mock data in case of error
@@ -71,20 +89,24 @@ export const foodService = {
   
   createFoodItem: async (item: Omit<FoodItem, 'id' | 'createdAt' | 'status'>): Promise<FoodItem> => {
     try {
+      const formattedExpiryDate = item.expiryDate instanceof Date 
+        ? item.expiryDate.toISOString() 
+        : item.expiryDate;
+
       const { data, error } = await supabase
         .from('food_items')
-        .insert([{
+        .insert({
           name: item.name,
           provider_id: item.providerId,
           provider_name: item.providerName,
           category: item.category,
           quantity: item.quantity,
           quantity_unit: item.quantityUnit,
-          expiry_date: item.expiryDate,
+          expiry_date: formattedExpiryDate,
           description: item.description,
           pickup_instructions: item.pickupInstructions,
           status: 'available'
-        }])
+        })
         .select('*')
         .single();
 
@@ -93,13 +115,13 @@ export const foodService = {
         throw error;
       }
 
-      return data as unknown as FoodItem;
+      return mapFoodItemFromSupabase(data);
     } catch (error) {
       console.error('Failed to create food item:', error);
       // Fallback to mock implementation in case of error
       const newItem: FoodItem = {
         ...item,
-        id: Math.max(...mockFoodItems.map(i => i.id)) + 1,
+        id: `mock-${Date.now()}`,
         status: 'available' as FoodStatus,
         createdAt: new Date(),
       };
@@ -109,20 +131,26 @@ export const foodService = {
     }
   },
   
-  updateFoodItem: async (id: number, updates: Partial<FoodItem>): Promise<FoodItem | null> => {
+  updateFoodItem: async (id: string, updates: Partial<FoodItem>): Promise<FoodItem | null> => {
     try {
+      // Convert Date objects to ISO strings for Supabase
+      const formattedExpiryDate = updates.expiryDate instanceof Date
+        ? updates.expiryDate.toISOString()
+        : updates.expiryDate;
+
+      const updateData: any = {};
+      if (updates.name) updateData.name = updates.name;
+      if (updates.category) updateData.category = updates.category;
+      if (updates.quantity !== undefined) updateData.quantity = updates.quantity;
+      if (updates.quantityUnit) updateData.quantity_unit = updates.quantityUnit;
+      if (formattedExpiryDate) updateData.expiry_date = formattedExpiryDate;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.pickupInstructions !== undefined) updateData.pickup_instructions = updates.pickupInstructions;
+      if (updates.status) updateData.status = updates.status;
+
       const { data, error } = await supabase
         .from('food_items')
-        .update({
-          name: updates.name,
-          category: updates.category,
-          quantity: updates.quantity,
-          quantity_unit: updates.quantityUnit,
-          expiry_date: updates.expiryDate,
-          description: updates.description,
-          pickup_instructions: updates.pickupInstructions,
-          status: updates.status
-        })
+        .update(updateData)
         .eq('id', id)
         .select('*')
         .single();
@@ -132,7 +160,7 @@ export const foodService = {
         throw error;
       }
 
-      return data as unknown as FoodItem;
+      return mapFoodItemFromSupabase(data);
     } catch (error) {
       console.error('Failed to update food item:', error);
       // Fallback to mock implementation in case of error
@@ -144,7 +172,7 @@ export const foodService = {
     }
   },
   
-  deleteFoodItem: async (id: number): Promise<boolean> => {
+  deleteFoodItem: async (id: string): Promise<boolean> => {
     try {
       const { error } = await supabase
         .from('food_items')
