@@ -1,121 +1,117 @@
+"use client"
 
-import React, { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { CartItem as CartItemType } from '@/lib/types';
-import FoodCategoryBadge from '@/components/common/FoodCategoryBadge';
-import ExpiryBadge from '@/components/common/ExpiryBadge';
-import { useToast } from '@/hooks/use-toast';
+import type React from "react"
+import { useState } from "react"
+import { X, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import type { CartItem as CartItemType } from "@/lib/types"
+import FoodCategoryBadge from "@/components/common/FoodCategoryBadge"
+import ExpiryBadge from "@/components/common/ExpiryBadge"
+import { useToast } from "@/hooks/use-toast"
 
 interface CartItemProps {
-  item: CartItemType;
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onRemove: (id: string) => void;
+  item: CartItemType
+  onUpdateQuantity: (id: string, quantity: number) => void
+  onRemove: (id: string) => void
 }
 
 export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
-  const [quantity, setQuantity] = useState(item.quantity);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
-  const { toast } = useToast();
-  
+  const [quantity, setQuantity] = useState(item.quantity)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false)
+  const { toast } = useToast()
+
   if (!item.foodItem) {
     // Return a message with a retry option
     return (
       <div className="p-4 border rounded-md bg-gray-50">
         <div className="text-center text-gray-500">
           <p className="mb-2">Item information unavailable</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => window.location.reload()}
-          >
+          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
             Retry
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
-  const foodItem = item.foodItem;
+  const foodItem = item.foodItem
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newQuantity = parseInt(e.target.value);
+    const newQuantity = Number.parseInt(e.target.value)
     if (!isNaN(newQuantity) && newQuantity > 0 && newQuantity <= foodItem.quantity) {
-      setQuantity(newQuantity);
+      setQuantity(newQuantity)
     } else {
       toast({
         title: "Invalid quantity",
         description: `Quantity must be between 1 and ${foodItem.quantity}`,
-        variant: "destructive"
-      });
+        variant: "destructive",
+      })
     }
-  };
+  }
 
   const handleUpdateQuantity = async () => {
-    if (quantity === item.quantity) return;
-    
+    if (quantity === item.quantity) return
+
     try {
-      setIsUpdating(true);
-      await onUpdateQuantity(item.id, quantity);
+      setIsUpdating(true)
+      await onUpdateQuantity(item.id, quantity)
       toast({
         title: "Success",
         description: "Quantity updated successfully",
-      });
+      })
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      console.error("Error updating quantity:", error)
       toast({
         title: "Error",
         description: "Failed to update quantity. Please try again.",
-        variant: "destructive"
-      });
+        variant: "destructive",
+      })
       // Reset to original quantity on error
-      setQuantity(item.quantity);
+      setQuantity(item.quantity)
     } finally {
-      setIsUpdating(false);
+      setIsUpdating(false)
     }
-  };
+  }
 
   const handleBlur = () => {
     if (quantity !== item.quantity) {
-      handleUpdateQuantity();
+      handleUpdateQuantity()
     }
-  };
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleUpdateQuantity();
+    if (e.key === "Enter") {
+      handleUpdateQuantity()
     }
-  };
+  }
 
   const handleRemove = async () => {
     try {
-      setIsRemoving(true);
-      await onRemove(item.id);
+      setIsRemoving(true)
+      await onRemove(item.id)
       toast({
         title: "Item removed",
         description: "Item has been removed from your cart",
-      });
+      })
     } catch (error) {
-      console.error("Error removing item:", error);
+      console.error("Error removing item:", error)
       toast({
         title: "Error",
         description: "Failed to remove item. Please try again.",
-        variant: "destructive"
-      });
-      setIsRemoving(false);
+        variant: "destructive",
+      })
+      setIsRemoving(false)
     }
-  };
+  }
 
   return (
     <div className="flex items-center space-x-4 py-4 border-b">
       <div className="flex-1">
         <h4 className="font-medium text-base">{foodItem.name}</h4>
         <div className="flex items-center space-x-2 mt-1">
-          <p className="text-sm text-gray-500">
-            {foodItem.providerName || 'Unknown Provider'}
-          </p>
+          <p className="text-sm text-gray-500">{foodItem.providerName || "Unknown Provider"}</p>
           <span className="text-gray-300">•</span>
           <FoodCategoryBadge category={foodItem.category} />
         </div>
@@ -144,12 +140,8 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         className="h-8 w-8 text-gray-500 hover:text-red-500"
         disabled={isRemoving}
       >
-        {isRemoving ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <X className="h-4 w-4" />
-        )}
+        {isRemoving ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
       </Button>
     </div>
-  );
+  )
 }

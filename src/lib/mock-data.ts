@@ -1,5 +1,4 @@
-
-import { FoodItem, CartItem, Order, OrderItem, User } from './types';
+import type { FoodItem, CartItem, Order, OrderItem, User } from "./types"
 
 // Mock users data
 export const mockUsers: User[] = [
@@ -12,7 +11,7 @@ export const mockUsers: User[] = [
     address: "123 Main St, City",
     userType: "provider",
     providerType: "Food Bank",
-    createdAt: new Date("2023-01-15")
+    createdAt: new Date("2023-01-15"),
   },
   {
     id: "2",
@@ -23,7 +22,7 @@ export const mockUsers: User[] = [
     address: "456 Oak St, City",
     userType: "provider",
     providerType: "Restaurant",
-    createdAt: new Date("2023-01-20")
+    createdAt: new Date("2023-01-20"),
   },
   {
     id: "3",
@@ -35,7 +34,7 @@ export const mockUsers: User[] = [
     userType: "ngo",
     registrationNumber: "NGO12345",
     peopleServed: 150,
-    createdAt: new Date("2023-01-25")
+    createdAt: new Date("2023-01-25"),
   },
   {
     id: "4",
@@ -47,9 +46,9 @@ export const mockUsers: User[] = [
     userType: "ngo",
     registrationNumber: "NGO67890",
     peopleServed: 200,
-    createdAt: new Date("2023-02-01")
-  }
-];
+    createdAt: new Date("2023-02-01"),
+  },
+]
 
 // Mock food items data
 export const mockFoodItems: FoodItem[] = [
@@ -65,7 +64,7 @@ export const mockFoodItems: FoodItem[] = [
     description: "White basmati rice bags",
     pickupInstructions: "Available for pickup from 9 AM to 5 PM weekdays",
     status: "available",
-    createdAt: new Date("2023-03-15")
+    createdAt: new Date("2023-03-15"),
   },
   {
     id: "2",
@@ -79,7 +78,7 @@ export const mockFoodItems: FoodItem[] = [
     description: "Fresh seasonal vegetables",
     pickupInstructions: "Available for pickup from 9 AM to 5 PM weekdays",
     status: "available",
-    createdAt: new Date("2023-03-16")
+    createdAt: new Date("2023-03-16"),
   },
   {
     id: "3",
@@ -93,7 +92,7 @@ export const mockFoodItems: FoodItem[] = [
     description: "Vegetarian meals with rice and curry",
     pickupInstructions: "Available for pickup from 2 PM to 4 PM today",
     status: "available",
-    createdAt: new Date("2023-03-17")
+    createdAt: new Date("2023-03-17"),
   },
   {
     id: "4",
@@ -107,9 +106,9 @@ export const mockFoodItems: FoodItem[] = [
     description: "Freshly baked whole wheat bread",
     pickupInstructions: "Available for pickup from 5 PM to 7 PM today",
     status: "available",
-    createdAt: new Date("2023-03-18")
-  }
-];
+    createdAt: new Date("2023-03-18"),
+  },
+]
 
 // Mock cart items data
 export const mockCartItems: CartItem[] = [
@@ -118,23 +117,23 @@ export const mockCartItems: CartItem[] = [
     ngoId: "3",
     foodItemId: "1",
     quantity: 10,
-    createdAt: new Date("2023-04-01")
+    createdAt: new Date("2023-04-01"),
   },
   {
     id: "2",
     ngoId: "3",
     foodItemId: "2",
     quantity: 5,
-    createdAt: new Date("2023-04-01")
+    createdAt: new Date("2023-04-01"),
   },
   {
     id: "3",
     ngoId: "4",
     foodItemId: "3",
     quantity: 15,
-    createdAt: new Date("2023-04-02")
-  }
-];
+    createdAt: new Date("2023-04-02"),
+  },
+]
 
 // Mock orders data
 export const mockOrders: Order[] = [
@@ -147,7 +146,7 @@ export const mockOrders: Order[] = [
     contactPhone: "123-456-7892",
     pickupTime: new Date("2023-04-05T15:00:00"),
     notes: "Please pack items separately",
-    createdAt: new Date("2023-04-03")
+    createdAt: new Date("2023-04-03"),
   },
   {
     id: "2",
@@ -157,9 +156,9 @@ export const mockOrders: Order[] = [
     contactPerson: "Jane Smith",
     contactPhone: "123-456-7893",
     pickupTime: new Date("2023-04-10T14:00:00"),
-    createdAt: new Date("2023-04-04")
-  }
-];
+    createdAt: new Date("2023-04-04"),
+  },
+]
 
 // Mock order items data
 export const mockOrderItems: OrderItem[] = [
@@ -169,7 +168,7 @@ export const mockOrderItems: OrderItem[] = [
     foodItemId: "1",
     providerId: "1",
     providerName: "City Food Bank",
-    quantity: 8
+    quantity: 8,
   },
   {
     id: "2",
@@ -177,7 +176,7 @@ export const mockOrderItems: OrderItem[] = [
     foodItemId: "2",
     providerId: "1",
     providerName: "City Food Bank",
-    quantity: 6
+    quantity: 6,
   },
   {
     id: "3",
@@ -185,6 +184,6 @@ export const mockOrderItems: OrderItem[] = [
     foodItemId: "3",
     providerId: "2",
     providerName: "Green Plate Restaurant",
-    quantity: 12
-  }
-];
+    quantity: 12,
+  },
+]

@@ -1,112 +1,92 @@
-
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { FoodItem, FoodCategory } from '@/lib/types';
-import { useToast } from '@/hooks/use-toast';
+"use client"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { FoodItem, FoodCategory } from "@/lib/types"
+import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
   name: z.string().min(3, {
-    message: 'Name must be at least 3 characters.',
+    message: "Name must be at least 3 characters.",
   }),
-  category: z.enum(['prepared', 'grocery', 'produce', 'bakery', 'dairy', 'other']),
+  category: z.enum(["prepared", "grocery", "produce", "bakery", "dairy", "other"]),
   quantity: z.coerce.number().positive({
-    message: 'Quantity must be a positive number.',
+    message: "Quantity must be a positive number.",
   }),
   quantityUnit: z.string().min(1, {
-    message: 'Unit is required.',
+    message: "Unit is required.",
   }),
   expiryDate: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: 'Please enter a valid date.',
+    message: "Please enter a valid date.",
   }),
   description: z.string().optional(),
   pickupInstructions: z.string().optional(),
-});
+})
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>
 
 interface FoodFormProps {
-  onSubmit: (data: Omit<FoodItem, 'id' | 'status' | 'createdAt'>) => void;
-  initialData?: Partial<FoodItem>;
-  isLoading?: boolean;
-  providerId: string; // Changed from number to string
+  onSubmit: (data: Omit<FoodItem, "id" | "status" | "createdAt">) => void
+  initialData?: Partial<FoodItem>
+  isLoading?: boolean
+  providerId: string // Changed from number to string
 }
 
-export default function FoodForm({
-  onSubmit,
-  initialData,
-  isLoading = false,
-  providerId,
-}: FoodFormProps) {
-  const { toast } = useToast();
-  
+export default function FoodForm({ onSubmit, initialData, isLoading = false, providerId }: FoodFormProps) {
+  const { toast } = useToast()
+
   // Format date to YYYY-MM-DD format for input
   const formatDateForInput = (date: Date | undefined) => {
-    if (!date) return '';
-    return date.toISOString().split('T')[0];
-  };
+    if (!date) return ""
+    return date.toISOString().split("T")[0]
+  }
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: initialData?.name || '',
-      category: initialData?.category || 'other',
+      name: initialData?.name || "",
+      category: initialData?.category || "other",
       quantity: initialData?.quantity || 1,
-      quantityUnit: initialData?.quantityUnit || 'kg',
+      quantityUnit: initialData?.quantityUnit || "kg",
       expiryDate: formatDateForInput(initialData?.expiryDate),
-      description: initialData?.description || '',
-      pickupInstructions: initialData?.pickupInstructions || '',
+      description: initialData?.description || "",
+      pickupInstructions: initialData?.pickupInstructions || "",
     },
-  });
+  })
 
   const handleSubmit = (values: FormData) => {
     try {
       onSubmit({
         name: values.name,
         providerId: providerId,
-        providerName: initialData?.providerName || '',
+        providerName: initialData?.providerName || "",
         category: values.category as FoodCategory,
         quantity: values.quantity,
         quantityUnit: values.quantityUnit,
         expiryDate: new Date(values.expiryDate),
         description: values.description,
         pickupInstructions: values.pickupInstructions,
-      });
+      })
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error("Error submitting form:", error)
       toast({
         title: "Error",
         description: "Failed to submit form. Please try again.",
-        variant: "destructive"
-      });
+        variant: "destructive",
+      })
     }
-  };
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{initialData?.id ? 'Edit Food Item' : 'Add New Food Item'}</CardTitle>
+        <CardTitle>{initialData?.id ? "Edit Food Item" : "Add New Food Item"}</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -120,9 +100,7 @@ export default function FoodForm({
                   <FormControl>
                     <Input placeholder="e.g., Fresh Produce Box" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Provide a clear, descriptive name for the food item.
-                  </FormDescription>
+                  <FormDescription>Provide a clear, descriptive name for the food item.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -135,10 +113,7 @@ export default function FoodForm({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
@@ -167,9 +142,7 @@ export default function FoodForm({
                     <FormControl>
                       <Input type="date" {...field} />
                     </FormControl>
-                    <FormDescription>
-                      When will this food expire?
-                    </FormDescription>
+                    <FormDescription>When will this food expire?</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -231,11 +204,7 @@ export default function FoodForm({
                 <FormItem>
                   <FormLabel>Pickup Instructions (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Instructions for pickup..."
-                      className="min-h-[80px]"
-                      {...field}
-                    />
+                    <Textarea placeholder="Instructions for pickup..." className="min-h-[80px]" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -244,12 +213,12 @@ export default function FoodForm({
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? 'Saving...' : initialData?.id ? 'Update Item' : 'Add Item'}
+                {isLoading ? "Saving..." : initialData?.id ? "Update Item" : "Add Item"}
               </Button>
             </div>
           </form>
         </Form>
       </CardContent>
     </Card>
-  );
+  )
 }

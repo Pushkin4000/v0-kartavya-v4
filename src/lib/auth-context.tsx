@@ -1,130 +1,131 @@
+"use client"
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserType } from './types';
-import { mockUsers } from './mock-data';
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/integrations/supabase/client';
+import type React from "react"
+import { createContext, useContext, useState, useEffect } from "react"
+import type { User, UserType } from "./types"
+import { mockUsers } from "./mock-data"
+import { useToast } from "@/hooks/use-toast"
 
 interface AuthContextType {
-  user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  register: (userData: Partial<User>, password: string) => Promise<boolean>;
-  isLoading: boolean;
+  user: User | null
+  login: (username: string, password: string) => Promise<boolean>
+  logout: () => void
+  register: (userData: Partial<User>, password: string) => Promise<boolean>
+  isLoading: boolean
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const { toast } = useToast()
 
   useEffect(() => {
     // Check for saved user in localStorage
     const checkSavedUser = () => {
       try {
-        const savedUser = localStorage.getItem('kartavya_user');
+        const savedUser = localStorage.getItem("kartavya_user")
         if (savedUser) {
-          const parsedUser = JSON.parse(savedUser);
-          setUser(parsedUser);
+          const parsedUser = JSON.parse(savedUser)
+          setUser(parsedUser)
         }
       } catch (error) {
-        console.error('Failed to parse saved user:', error);
+        console.error("Failed to parse saved user:", error)
         // Clear corrupted user data
-        localStorage.removeItem('kartavya_user');
+        localStorage.removeItem("kartavya_user")
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    checkSavedUser();
-  }, []);
+    checkSavedUser()
+  }, [])
 
   const login = async (username: string, password: string): Promise<boolean> => {
     // In a real app, this would make an API call to validate credentials
-    setIsLoading(true);
-    
+    setIsLoading(true)
+
     try {
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
       // Mock authentication - find user by username
       // In real implementation, this would check password hash against DB
-      const foundUser = mockUsers.find(u => u.username === username);
-      
+      const foundUser = mockUsers.find((u) => u.username === username)
+
       if (foundUser) {
-        setUser(foundUser);
-        localStorage.setItem('kartavya_user', JSON.stringify(foundUser));
-        
+        setUser(foundUser)
+        localStorage.setItem("kartavya_user", JSON.stringify(foundUser))
+
         toast({
           title: "Login Successful",
           description: `Welcome back, ${foundUser.name}!`,
-        });
-        return true;
+        })
+        return true
       } else {
         toast({
           title: "Login Failed",
           description: "Invalid username or password",
           variant: "destructive",
-        });
-        return false;
+        })
+        return false
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error)
       toast({
         title: "Login Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
-      });
-      return false;
+      })
+      return false
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const logout = () => {
     try {
-      setUser(null);
-      localStorage.removeItem('kartavya_user');
-      
+      setUser(null)
+      localStorage.removeItem("kartavya_user")
+
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",
-      });
-      
+      })
+
       // Redirect to home page after logout (can be handled by calling component if needed)
-      window.location.href = '/';
+      window.location.href = "/"
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error)
       toast({
         title: "Logout Error",
         description: "An error occurred while logging out. Please try again.",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
 
   const register = async (userData: Partial<User>, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
+    setIsLoading(true)
+
     try {
       // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
       // In real app, this would create a new user in the database
       // For demo, we'll pretend to create a new user
-      const existingUser = mockUsers.find(u => u.username === userData.username || u.email === userData.email);
-      
+      const existingUser = mockUsers.find((u) => u.username === userData.username || u.email === userData.email)
+
       if (existingUser) {
         toast({
           title: "Registration Failed",
           description: "Username or email already exists",
           variant: "destructive",
-        });
-        return false;
+        })
+        return false
       }
-      
+
       // Create a new user (in a real app, this would be saved to DB)
       const newUser: User = {
         id: `mock-${Date.now()}`, // Generate a string ID instead of a number
@@ -138,43 +139,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         peopleServed: userData.peopleServed,
         providerType: userData.providerType,
         createdAt: new Date(),
-      };
-      
+      }
+
       // In a real app, we would save to DB here
       // For our mock example, we just set the current user
-      setUser(newUser);
-      localStorage.setItem('kartavya_user', JSON.stringify(newUser));
-      
+      setUser(newUser)
+      localStorage.setItem("kartavya_user", JSON.stringify(newUser))
+
       toast({
         title: "Registration Successful",
         description: `Welcome to Kartavya, ${newUser.name}!`,
-      });
-      
-      return true;
+      })
+
+      return true
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Registration error:", error)
       toast({
         title: "Registration Error",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
-      });
-      return false;
+      })
+      return false
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  return (
-    <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ user, login, logout, register, isLoading }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider")
   }
-  return context;
+  return context
 }

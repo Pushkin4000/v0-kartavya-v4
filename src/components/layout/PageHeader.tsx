@@ -1,7 +1,6 @@
-
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Bell, LogOut, Menu, Package, Settings, User } from 'lucide-react';
+"use client"
+import { Link, useNavigate } from "react-router-dom"
+import { Bell, LogOut, Menu, Package, Settings, User } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,40 +8,40 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { useAuth } from '@/lib/auth-context';
-import NavLinks from './NavLinks';
-import { useToast } from '@/hooks/use-toast';
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { useAuth } from "@/lib/auth-context"
+import NavLinks from "./NavLinks"
+import { useToast } from "@/hooks/use-toast"
 
 export default function PageHeader() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(part => part.charAt(0))
-      .join('')
-      .toUpperCase();
-  };
+      .split(" ")
+      .map((part) => part.charAt(0))
+      .join("")
+      .toUpperCase()
+  }
 
   const handleLogout = () => {
     try {
-      logout();
-      navigate('/');
+      logout()
+      navigate("/")
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error)
       toast({
         title: "Logout Error",
         description: "There was a problem logging out. Please try again.",
-        variant: "destructive"
-      });
+        variant: "destructive",
+      })
     }
-  };
+  }
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
@@ -51,15 +50,10 @@ export default function PageHeader() {
           {/* Logo and nav for desktop */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
-              <Package 
-                className="h-8 w-8 text-kartavya-primary" 
-                strokeWidth={2} 
-              />
-              <span className="ml-2 font-heading font-bold text-xl text-kartavya-dark">
-                Kartavya
-              </span>
+              <Package className="h-8 w-8 text-kartavya-primary" strokeWidth={2} />
+              <span className="ml-2 font-heading font-bold text-xl text-kartavya-dark">Kartavya</span>
             </Link>
-            
+
             {/* Desktop Navigation */}
             <nav className="hidden md:ml-10 md:flex space-x-8">
               <NavLinks />
@@ -77,13 +71,8 @@ export default function PageHeader() {
               </SheetTrigger>
               <SheetContent side="left" className="w-[300px] sm:w-[400px]">
                 <Link to="/" className="flex items-center mb-6">
-                  <Package 
-                    className="h-8 w-8 text-kartavya-primary" 
-                    strokeWidth={2} 
-                  />
-                  <span className="ml-2 font-heading font-bold text-xl text-kartavya-dark">
-                    Kartavya
-                  </span>
+                  <Package className="h-8 w-8 text-kartavya-primary" strokeWidth={2} />
+                  <span className="ml-2 font-heading font-bold text-xl text-kartavya-dark">Kartavya</span>
                 </Link>
                 <nav className="flex flex-col space-y-4">
                   <NavLinks />
@@ -100,27 +89,23 @@ export default function PageHeader() {
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500" />
                 </Button>
-                
+
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="relative h-8 rounded-full flex items-center gap-2">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback className="bg-kartavya-primary text-white">
-                          {user ? getInitials(user.name) : 'U'}
+                          {user ? getInitials(user.name) : "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="hidden md:inline-block font-medium truncate max-w-[100px]">
-                        {user.name}
-                      </span>
+                      <span className="hidden md:inline-block font-medium truncate max-w-[100px]">{user.name}</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">{user.name}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
@@ -137,10 +122,7 @@ export default function PageHeader() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      className="cursor-pointer text-red-600 focus:text-red-600" 
-                      onClick={handleLogout}
-                    >
+                    <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>
@@ -161,5 +143,5 @@ export default function PageHeader() {
         </div>
       </div>
     </header>
-  );
+  )
 }
