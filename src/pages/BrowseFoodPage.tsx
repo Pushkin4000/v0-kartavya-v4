@@ -64,7 +64,7 @@ export default function BrowseFoodPage() {
     };
 
     fetchFoodItems();
-  }, []);
+  }, [toast]); // Add toast dependency
 
   // Filter food items when search query or category filter changes
   useEffect(() => {
@@ -75,8 +75,8 @@ export default function BrowseFoodPage() {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(item => 
         item.name.toLowerCase().includes(query) || 
-        item.description?.toLowerCase().includes(query) ||
-        item.providerName?.toLowerCase().includes(query)
+        (item.description?.toLowerCase() || '').includes(query) ||
+        (item.providerName?.toLowerCase() || '').includes(query)
       );
     }
     

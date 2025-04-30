@@ -143,17 +143,9 @@ export const foodService = {
   
   updateFoodItem: async (id: string, updates: Partial<FoodItem>): Promise<FoodItem | null> => {
     try {
-      // Convert to Supabase format
-      const updateData = {};
+      const updateData = mapFoodItemToSupabase(updates);
       
-      if (updates.name) updateData['name'] = updates.name;
-      if (updates.category) updateData['category'] = updates.category;
-      if (updates.quantity !== undefined) updateData['quantity'] = updates.quantity;
-      if (updates.quantityUnit) updateData['quantity_unit'] = updates.quantityUnit;
-      if (updates.expiryDate) updateData['expiry_date'] = updates.expiryDate instanceof Date ? updates.expiryDate.toISOString() : updates.expiryDate;
-      if (updates.description !== undefined) updateData['description'] = updates.description;
-      if (updates.pickupInstructions !== undefined) updateData['pickup_instructions'] = updates.pickupInstructions;
-      if (updates.status) updateData['status'] = updates.status;
+      console.log("Updating food item in Supabase:", id, updateData);
 
       const { data, error } = await supabase
         .from('food_items')
@@ -167,6 +159,7 @@ export const foodService = {
         throw error;
       }
 
+      console.log("Updated food item:", data);
       return mapFoodItemFromSupabase(data);
     } catch (error) {
       console.error('Failed to update food item:', error);

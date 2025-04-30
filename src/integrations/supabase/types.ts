@@ -39,13 +39,6 @@ export type Database = {
             referencedRelation: "food_items"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "cart_items_ngo_id_fkey"
-            columns: ["ngo_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       food_items: {
@@ -91,15 +84,7 @@ export type Database = {
           quantity_unit?: string
           status?: Database["public"]["Enums"]["food_status"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "food_items_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       order_items: {
         Row: {
@@ -141,13 +126,6 @@ export type Database = {
             referencedRelation: "orders"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "order_items_provider_id_fkey"
-            columns: ["provider_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       orders: {
@@ -184,20 +162,12 @@ export type Database = {
           pickup_time?: string
           status?: Database["public"]["Enums"]["order_status"]
         }
-        Relationships: [
-          {
-            foreignKeyName: "orders_ngo_id_fkey"
-            columns: ["ngo_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       users: {
         Row: {
           address: string | null
-          created_at: string
+          created_at: string | null
           email: string
           id: string
           name: string
@@ -205,25 +175,25 @@ export type Database = {
           phone: string | null
           provider_type: string | null
           registration_number: string | null
-          user_type: Database["public"]["Enums"]["user_type"]
+          user_type: string
           username: string
         }
         Insert: {
           address?: string | null
-          created_at?: string
+          created_at?: string | null
           email: string
-          id?: string
+          id: string
           name: string
           people_served?: number | null
           phone?: string | null
           provider_type?: string | null
           registration_number?: string | null
-          user_type: Database["public"]["Enums"]["user_type"]
+          user_type: string
           username: string
         }
         Update: {
           address?: string | null
-          created_at?: string
+          created_at?: string | null
           email?: string
           id?: string
           name?: string
@@ -231,7 +201,7 @@ export type Database = {
           phone?: string | null
           provider_type?: string | null
           registration_number?: string | null
-          user_type?: Database["public"]["Enums"]["user_type"]
+          user_type?: string
           username?: string
         }
         Relationships: []

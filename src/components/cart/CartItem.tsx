@@ -21,7 +21,8 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
   const { toast } = useToast();
   
   if (!item.foodItem) {
-    return null; // Don't render if food item is missing
+    // Return a message instead of null
+    return <div className="p-4 text-center text-gray-500">Item information unavailable</div>;
   }
 
   const foodItem = item.foodItem;
