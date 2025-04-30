@@ -10,14 +10,13 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  async redirects() {
-    return [
-      {
-        source: "/",
-        destination: "/src/pages/HomePage",
-        permanent: true,
-      },
-    ]
+  webpack: (config) => {
+    // This is to handle the @ alias in imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@": __dirname,
+    }
+    return config
   },
 }
 
