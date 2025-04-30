@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
-import { Search, Package, Loader2 } from 'lucide-react';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Search, Package, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,12 +23,14 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function BrowseFoodPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [filteredItems, setFilteredItems] = useState<FoodItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Use React Query to fetch and cache food items
+  // Use React Query to fetch and cache food items with shorter staleTime
   const { 
     data: foodItems = [], 
     isLoading, 
@@ -47,7 +49,7 @@ export default function BrowseFoodPage() {
         throw error;
       }
     },
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    staleTime: 5000, // Consider data fresh for only 5 seconds to ensure frequent updates
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
@@ -114,8 +116,17 @@ export default function BrowseFoodPage() {
     }
   };
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      toast({
+        title: 'Refreshed',
+        description: 'Food listings have been refreshed.',
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   return (
@@ -157,7 +168,19 @@ export default function BrowseFoodPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={handleRefresh} variant="outline">Refresh</Button>
+        <Button onClick={handleRefresh} variant="outline" disabled={isRefreshing}>
+          {isRefreshing ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </>
+          )}
+        </Button>
       </div>
       
       {/* Food items grid */}
@@ -206,7 +229,7 @@ export default function BrowseFoodPage() {
               setSearchQuery('');
               setCategoryFilter('all');
             } else {
-              refetch();
+              handleRefresh();
             }
           }}
         />

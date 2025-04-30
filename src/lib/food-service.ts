@@ -46,13 +46,13 @@ export const foodService = {
     try {
       console.log("Fetching all available food items from Supabase...");
       
-      // Add a delay to ensure we're getting the latest data
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      // Remove the delay that might be causing timing issues
+      // and fetch with a more direct approach
       const { data, error } = await supabase
         .from('food_items')
         .select('*')
-        .eq('status', 'available');
+        .eq('status', 'available')
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching food items:', error);
