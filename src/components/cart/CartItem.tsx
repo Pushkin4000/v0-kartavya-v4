@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CartItem as CartItemType } from '@/lib/types';
@@ -21,8 +21,21 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
   const { toast } = useToast();
   
   if (!item.foodItem) {
-    // Return a message instead of null
-    return <div className="p-4 text-center text-gray-500">Item information unavailable</div>;
+    // Return a message with a retry option
+    return (
+      <div className="p-4 border rounded-md bg-gray-50">
+        <div className="text-center text-gray-500">
+          <p className="mb-2">Item information unavailable</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const foodItem = item.foodItem;
@@ -46,6 +59,10 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
     try {
       setIsUpdating(true);
       await onUpdateQuantity(item.id, quantity);
+      toast({
+        title: "Success",
+        description: "Quantity updated successfully",
+      });
     } catch (error) {
       console.error("Error updating quantity:", error);
       toast({
@@ -76,6 +93,10 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
     try {
       setIsRemoving(true);
       await onRemove(item.id);
+      toast({
+        title: "Item removed",
+        description: "Item has been removed from your cart",
+      });
     } catch (error) {
       console.error("Error removing item:", error);
       toast({
@@ -123,7 +144,11 @@ export default function CartItem({ item, onUpdateQuantity, onRemove }: CartItemP
         className="h-8 w-8 text-gray-500 hover:text-red-500"
         disabled={isRemoving}
       >
-        <X className="h-4 w-4" />
+        {isRemoving ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <X className="h-4 w-4" />
+        )}
       </Button>
     </div>
   );

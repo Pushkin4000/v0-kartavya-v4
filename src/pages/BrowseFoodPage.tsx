@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Search, Package } from 'lucide-react';
+import { Search, Package, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,16 +19,37 @@ import { cartService } from '@/lib/cart-service';
 import { FoodItem } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import EmptyState from '@/components/common/EmptyState';
+import { useQuery } from '@tanstack/react-query';
 
 export default function BrowseFoodPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<FoodItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+
+  // Use React Query to fetch and cache food items
+  const { 
+    data: foodItems = [], 
+    isLoading, 
+    error: queryError,
+    refetch
+  } = useQuery({
+    queryKey: ['foodItems'],
+    queryFn: async () => {
+      console.log("Fetching food items with React Query...");
+      try {
+        const items = await foodService.getAllFoodItems();
+        console.log("Food items fetched successfully:", items);
+        return items;
+      } catch (error) {
+        console.error("Error in queryFn:", error);
+        throw error;
+      }
+    },
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: true, // Refetch when window regains focus
+  });
 
   // Redirect if not logged in or not an NGO
   if (!user) {
@@ -39,35 +60,13 @@ export default function BrowseFoodPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Load food items on component mount
-  useEffect(() => {
-    const fetchFoodItems = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log("Fetching food items...");
-        const items = await foodService.getAllFoodItems();
-        console.log("Retrieved items:", items);
-        setFoodItems(items);
-        setFilteredItems(items);
-      } catch (err) {
-        console.error('Error fetching food items:', err);
-        setError('Failed to load food listings. Please try again later.');
-        toast({
-          title: 'Error',
-          description: 'Failed to load food listings. Please try again later.',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFoodItems();
-  }, [toast]); // Add toast dependency
-
   // Filter food items when search query or category filter changes
   useEffect(() => {
+    if (!foodItems) {
+      setFilteredItems([]);
+      return;
+    }
+    
     let filtered = [...foodItems];
     
     // Filter by search query
@@ -115,6 +114,10 @@ export default function BrowseFoodPage() {
     }
   };
 
+  const handleRefresh = () => {
+    refetch();
+  };
+
   return (
     <PageLayout>
       <div className="mb-8">
@@ -125,7 +128,7 @@ export default function BrowseFoodPage() {
       </div>
       
       {/* Search and filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
@@ -154,25 +157,22 @@ export default function BrowseFoodPage() {
             </SelectContent>
           </Select>
         </div>
+        <Button onClick={handleRefresh} variant="outline">Refresh</Button>
       </div>
       
       {/* Food items grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, index) => (
-            <div 
-              key={index} 
-              className="bg-gray-100 animate-pulse rounded-md h-72"
-            />
-          ))}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2">Loading food items...</span>
         </div>
-      ) : error ? (
+      ) : queryError ? (
         <div className="text-center py-12">
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500">Failed to load food listings. Please try again.</p>
           <Button 
             variant="outline" 
             className="mt-4"
-            onClick={() => window.location.reload()}
+            onClick={() => refetch()}
           >
             Try Again
           </Button>
@@ -199,11 +199,15 @@ export default function BrowseFoodPage() {
           actionLabel={
             searchQuery || categoryFilter !== 'all'
               ? "Clear Filters"
-              : undefined
+              : "Refresh Listings"
           }
           onAction={() => {
-            setSearchQuery('');
-            setCategoryFilter('all');
+            if (searchQuery || categoryFilter !== 'all') {
+              setSearchQuery('');
+              setCategoryFilter('all');
+            } else {
+              refetch();
+            }
           }}
         />
       )}

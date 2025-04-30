@@ -45,6 +45,10 @@ export const foodService = {
   getAllFoodItems: async (): Promise<FoodItem[]> => {
     try {
       console.log("Fetching all available food items from Supabase...");
+      
+      // Add a delay to ensure we're getting the latest data
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const { data, error } = await supabase
         .from('food_items')
         .select('*')
@@ -67,6 +71,8 @@ export const foodService = {
   
   getFoodItemsByProvider: async (providerId: string): Promise<FoodItem[]> => {
     try {
+      console.log(`Fetching food items for provider ${providerId}...`);
+      
       const { data, error } = await supabase
         .from('food_items')
         .select('*')
@@ -77,6 +83,7 @@ export const foodService = {
         throw error;
       }
 
+      console.log("Retrieved provider food items:", data);
       return data ? data.map(mapFoodItemFromSupabase) : [];
     } catch (error) {
       console.error('Failed to fetch provider food items:', error);
@@ -87,6 +94,8 @@ export const foodService = {
   
   getFoodItem: async (id: string): Promise<FoodItem | null> => {
     try {
+      console.log(`Fetching food item with id ${id}...`);
+      
       const { data, error } = await supabase
         .from('food_items')
         .select('*')
@@ -98,6 +107,7 @@ export const foodService = {
         throw error;
       }
 
+      console.log("Retrieved food item:", data);
       return data ? mapFoodItemFromSupabase(data) : null;
     } catch (error) {
       console.error('Failed to fetch food item:', error);
@@ -174,6 +184,8 @@ export const foodService = {
   
   deleteFoodItem: async (id: string): Promise<boolean> => {
     try {
+      console.log(`Deleting food item with id ${id}...`);
+      
       const { error } = await supabase
         .from('food_items')
         .delete()
@@ -184,6 +196,7 @@ export const foodService = {
         throw error;
       }
 
+      console.log("Food item deleted successfully");
       return true;
     } catch (error) {
       console.error('Failed to delete food item:', error);
